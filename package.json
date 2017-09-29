@@ -27,5 +27,5 @@
     "s3cput": "./bin/s3cput",
     "s3cget": "./bin/s3cget",
     "s3crm": "./bin/s3crm"
-  },
+  }
 }
