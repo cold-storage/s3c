@@ -25,7 +25,7 @@ const s3 = new(require('../lib/s3'))({
 });
 const {
   encrypt
-} = require('../lib/crypt');
+} = require('ez-aes-256-cbc');
 
 const popts = {
   properties: {
