@@ -41,11 +41,10 @@ s3cput ../some-file.json some/s3/path
 s3cget some/s3/path/some-file.json ~/local/path
 ```
 
-## Delete everything
+## Delete remote file and password
 
-This deletes the local file, the file in S3 and the password from your
-Keychain.
+This deletes the file in S3 and the password from your Keychain.
 
 ```
-s3crm ../some-file.json some/s3/path
+s3crm some/s3/path/some-file.json
 ```

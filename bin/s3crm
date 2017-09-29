@@ -2,21 +2,18 @@
 
 'use strict';
 
-if (process.argv.length < 3 ||
+if (process.argv.length < 2 ||
   process.argv[2] === '-h' ||
   process.argv[2] === '--help') {
   exitWithError(new Error(`
-  Usage: s3crm local/file.txt remote/path
+  Usage: s3crm remote/path/file.txt
 
-  Deletes local/file.txt
   Deletes remote/path/file.txt from S3
   Deletes password from Keychain
 `));
 }
 
-const path = require('path');
 const keychain = require('keychain');
-const fs = require('fs');
 const bucketName = process.env.S3C_BUCKET;
 if (!bucketName) {
   exitWithError(new Error('process.env.S3C_BUCKET is required'));
@@ -24,32 +21,12 @@ if (!bucketName) {
 const s3 = new(require('../lib/s3'))({
   bucket: bucketName
 });
-
-const localFile = process.argv[2];
-const localFileName = path.basename(localFile);
-const remotePath = s3.cleanRemotePath(process.argv[3]);
-const remoteFile = path.join(remotePath, localFileName);
-
-// console.log('localFile ' + localFile);
-// console.log('localFileName ' + localFileName);
-// console.log('remotePath ' + remotePath);
-// console.log('remoteFile ' + remoteFile);
-
-// process.exit(33);
-
+const remoteFile = s3.cleanRemotePath(process.argv[2]);
 function exitWithError(err) {
   console.error(err.message);
   process.exit(13);
 }
-
 function doItAll() {
-  try {
-    fs.unlinkSync(localFile);
-  } catch (err) {
-    if (err && !err.message.includes('o such file or directory')) {
-      console.error(err.message);
-    }
-  }
   s3.delete(remoteFile, function(err) {
     if (err) exitWithError(err);
     keychain.deletePassword({
@@ -62,5 +39,4 @@ function doItAll() {
     });
   });
 }
-
 doItAll();

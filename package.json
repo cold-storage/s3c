@@ -1,6 +1,6 @@
 {
   "name": "s3c",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "s3c(r3ts) Node.js command line app to manage secrets files in S3 (for macOS).",
   "keywords": ["Secure", "Secrets", "Node", "AES", "S3", "Encrypt"],
   "scripts": {
