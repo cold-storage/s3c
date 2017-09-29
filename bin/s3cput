@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+'use strict';
+
+if (process.argv.length < 3 ||
+  process.argv[2] === '-h' ||
+  process.argv[2] === '--help') {
+  exitWithError(new Error(`
+  Usage: s3cput local/file.txt remote/path
+
+  Encrypts local/file.txt and pushes it to S3 remote/path/file.txt
+`));
+}
+
+const path = require('path');
+const keychain = require('keychain');
+const prompt = require('prompt');
+const fs = require('fs');
+const bucketName = process.env.S3C_BUCKET;
+if (!bucketName) {
+  exitWithError(new Error('process.env.S3C_BUCKET is required'));
+}
+const s3 = new(require('../lib/s3'))({
+  bucket: bucketName
+});
+const {
+  encrypt
+} = require('../lib/crypt');
+
+const popts = {
+  properties: {
+    password: {
+      message: 'Must be exactly 32 characters long',
+      pattern: /^.{32}$/,
+      required: true,
+      hidden: true
+    }
+  }
+};
+
+const localFile = process.argv[2];
+const localFileName = path.basename(localFile);
+const remotePath = s3.cleanRemotePath(process.argv[3]);
+const remoteFile = path.join(remotePath, localFileName);
+
+// console.log('localFile ' + localFile);
+// console.log('localFileName ' + localFileName);
+// console.log('remotePath ' + remotePath);
+// console.log('remoteFile ' + remoteFile);
+
+// process.exit(33);
+
+function exitWithError(err) {
+  console.error(err.message);
+  process.exit(13);
+}
+
+function cryptAndSend(password) {
+  const text = fs.readFileSync(localFile);
+  s3.put(encrypt(text, password), remoteFile, function(err) {
+    if (err) exitWithError(err);
+    // This is a bit much.
+    // if ('keep' !== process.argv[4]) {
+    //   fs.unlinkSync(localFile);
+    // }
+  });
+}
+
+keychain.getPassword({
+  account: bucketName,
+  service: remoteFile
+}, function(err, password) {
+  if (err) {
+    // prompt for password
+    prompt.start();
+    prompt.get(popts, function(err, result) {
+      // console.log(result.password);
+      if (err) {
+        exitWithError(err);
+      } else {
+        // save password
+        keychain.setPassword({
+          account: bucketName,
+          service: remoteFile,
+          password: result.password
+        }, function(err) {
+          if (err) {
+            exitWithError(err);
+          } else {
+            cryptAndSend(result.password);
+          }
+        });
+      }
+    });
+  } else {
+    cryptAndSend(password);
+  }
+});

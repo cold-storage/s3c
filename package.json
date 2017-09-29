@@ -1,0 +1,27 @@
+{
+  "name": "s3c",
+  "version": "0.0.1",
+  "description": "s3c(r3ts) Node.js command line app to manage secrets files in S3 (for macOS).",
+  "keywords": ["Secure", "Secrets", "Node", "AES", "S3", "Encrypt"],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "John Stein",
+  "license": "Unlicense",
+  "jshintConfig": {
+    "node": true,
+    "esversion": 6,
+    "undef": true,
+    "unused": true
+  },
+  "dependencies": {
+    "aws-sdk": "2.123.0",
+    "keychain": "1.3.0",
+    "prompt": "1.0.0"
+  },
+  "bin": {
+    "s3cput": "./bin/s3cput",
+    "s3cget": "./bin/s3cget",
+    "s3crm": "./bin/s3crm"
+  },
+}

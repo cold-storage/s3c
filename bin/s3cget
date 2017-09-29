@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+
+'use strict';
+
+if (process.argv.length < 3 ||
+  process.argv[2] === '-h' ||
+  process.argv[2] === '--help') {
+  exitWithError(new Error(`
+  Usage: s3cget remote/file.txt ~/local/path
+
+  Gets remote/file.txt from S3, decrypts it
+  and writes it to ~/local/path/file.txt
+`));
+}
+
+const path = require('path');
+const keychain = require('keychain');
+const prompt = require('prompt');
+const fs = require('fs');
+const bucketName = process.env.S3C_BUCKET;
+if (!bucketName) {
+  exitWithError(new Error('process.env.S3C_BUCKET is required'));
+}
+const s3 = new(require('../lib/s3'))({
+  bucket: bucketName
+});
+const {
+  decrypt
+} = require('../lib/crypt');
+
+const popts = {
+  properties: {
+    password: {
+      message: 'Must be exactly 32 characters long',
+      pattern: /^.{32}$/,
+      required: true,
+      hidden: true
+    }
+  }
+};
+
+const remoteFile = s3.cleanRemotePath(process.argv[2]);
+const remoteFileName = path.basename(remoteFile);
+const localPath = process.argv[3];
+const localFile = path.join(localPath, remoteFileName);
+
+// console.log('remoteFile ' + remoteFile);
+// console.log('remoteFileName ' + remoteFileName);
+// console.log('localPath ' + localPath);
+// console.log('localFile ' + localFile);
+// console.log('getAndDecrypt ' + password);
+
+// process.exit(33);
+
+function exitWithError(err) {
+  console.error(err.message);
+  process.exit(13);
+}
+
+function getAndDecrypt(password) {
+  s3.get(remoteFile, function(err, data) {
+    if (err) exitWithError(err);
+    fs.writeFileSync(localFile, decrypt(data, password));
+  });
+}
+
+keychain.getPassword({
+  account: bucketName,
+  service: remoteFile
+}, function(err, password) {
+  if (err) {
+    // prompt for password
+    prompt.start();
+    prompt.get(popts, function(err, result) {
+      // console.log(result.password);
+      if (err) {
+        exitWithError(err);
+      } else {
+        // save password
+        keychain.setPassword({
+          account: bucketName,
+          service: remoteFile,
+          password: result.password
+        }, function(err) {
+          if (err) {
+            exitWithError(err);
+          } else {
+            getAndDecrypt(result.password);
+          }
+        });
+      }
+    });
+  } else {
+    getAndDecrypt(password);
+  }
+});
