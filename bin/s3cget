@@ -10,6 +10,13 @@ if (process.argv.length < 3 ||
 
   Gets remote/file.txt from S3, decrypts it
   and writes it to ~/local/path/file.txt
+
+
+  process.env.S3C_BUCKET is required
+
+  Set process.env.S3C_IGNORE_SET_PW_ERR to any value
+  and we won't error if we were unable to save the
+  password in Keychain.
 `));
 }
 

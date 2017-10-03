@@ -9,6 +9,12 @@ if (process.argv.length < 3 ||
   Usage: s3cput local/file.txt remote/path
 
   Encrypts local/file.txt and pushes it to S3 remote/path/file.txt
+
+  process.env.S3C_BUCKET is required
+
+  Set process.env.S3C_IGNORE_SET_PW_ERR to any value
+  and we won't error if we were unable to save the
+  password in Keychain.
 `));
 }
 
