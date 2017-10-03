@@ -82,7 +82,7 @@ keychain.getPassword({
           service: remoteFile,
           password: result.password
         }, function(err) {
-          if (err) {
+          if (err && !process.env.S3C_IGNORE_SET_PW_ERR) {
             exitWithError(err);
           } else {
             getAndDecrypt(result.password);
